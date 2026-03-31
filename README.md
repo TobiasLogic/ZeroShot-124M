@@ -217,7 +217,7 @@ python train.py finetune --checkpoint checkpoints/ckpt_base_step55000.pt
 | Can Chat? | ❌ (base model only) | ✅ (full chat pipeline) |
 | Final Base Loss | 3.85 | 3.45 |
 | Training Time | ~15 hours | ~29 hours |
-| Total Cost | Free (local GPU) | $0.54 (Vast.ai) |
+| Total Cost | Free (local GPU) | $6.77 (Vast.ai) |
 
 ## The Great Firewall Incident
 
@@ -227,9 +227,9 @@ The original plan was to train on a GPU rented in China (cheaper rates). The Gre
 
 | Resource | Cost |
 |---|---|
-| Vast.ai RTX 5060 Ti (Vietnam) | $0.018/hr |
+| Vast.ai RTX 5060 Ti (Vietnam) | $0.064/hr |
 | Training time | ~30 hours |
-| **Total compute** | **~$0.54** |
+| **Total compute** | **~$6.77** |
 
 ## Acknowledgments
 

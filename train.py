@@ -1,5 +1,5 @@
 """
-Full LLM Training Pipeline — Base + Midtraining + SFT
+Full LLM Training Base + Midtraining + SFT
 Target: 1x RTX 5060 Ti (16GB VRAM)
 Data:   FineWeb-Edu (streamed, no disk needed)
 
@@ -25,10 +25,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.amp import GradScaler, autocast
 
-# ---------------------------------------------------------------------------
-# 0. CONFIG
-# ---------------------------------------------------------------------------
 
+#  CONFIG
 @dataclass
 class ModelConfig:
     vocab_size: int = 50304          # padded to multiple of 64 for tensor cores
@@ -42,8 +40,8 @@ class ModelConfig:
 @dataclass
 class TrainConfig:
     # optimization
-    batch_size: int = 16             # bigger micro-batch for 16GB
-    gradient_accumulation_steps: int = 8  # effective batch = 16*8 = 128
+    batch_size: int = 16             
+    gradient_accumulation_steps: int = 8  # E batch 128
     max_steps: int = 60_000
     learning_rate: float = 6e-4
     min_lr: float = 6e-5
@@ -66,9 +64,9 @@ class TrainConfig:
     resume: str = ""
 
 
-# ---------------------------------------------------------------------------
-# 1. MODEL
-# ---------------------------------------------------------------------------
+
+# MODEL
+
 
 class CausalSelfAttention(nn.Module):
     def __init__(self, config: ModelConfig):
@@ -183,9 +181,9 @@ class GPT(nn.Module):
         return idx
 
 
-# ---------------------------------------------------------------------------
-# 2. STREAMING DATA — FineWeb-Edu (no disk usage)
-# ---------------------------------------------------------------------------
+
+# 2. STREAMING DATA FineWeb-Edu 
+
 
 def get_tokenizer():
     import tiktoken
@@ -262,9 +260,9 @@ class StreamingTokenBuffer:
         return x, y
 
 
-# ---------------------------------------------------------------------------
-# 3. CONVERSATION DATA FOR MIDTRAINING + SFT
-# ---------------------------------------------------------------------------
+
+# CONVERSATION DATA FOR MIDTRAINING + SFT
+
 
 SPECIAL_TOKENS = {
     "user_start": "<|user|>",
@@ -286,7 +284,7 @@ def build_chat_datasets():
 
     conversations = []
 
-    # 1. SmolTalk — high quality conversations
+    # 1. SmolTalk  high quality conversations
     print("Loading SmolTalk conversations...")
     try:
         ds = load_dataset("HuggingFaceTB/smoltalk", "all", split="train", streaming=True)
@@ -305,7 +303,7 @@ def build_chat_datasets():
     except Exception as e:
         print(f"  SmolTalk failed: {e}")
 
-    # 2. OpenAssistant — diverse Q&A
+    # 2. OpenAssistant  diverse Q&A
     print("Loading OpenAssistant conversations...")
     try:
         ds = load_dataset("OpenAssistant/oasst2", split="train", streaming=True)
@@ -415,9 +413,9 @@ class ChatTokenBuffer:
         return x, y
 
 
-# ---------------------------------------------------------------------------
+
 # 4. LR SCHEDULE
-# ---------------------------------------------------------------------------
+
 
 def get_lr(step: int, max_steps: int, lr: float, min_lr: float, warmup: int) -> float:
     if step < warmup:
@@ -429,9 +427,8 @@ def get_lr(step: int, max_steps: int, lr: float, min_lr: float, warmup: int) -> 
     return min_lr + coeff * (lr - min_lr)
 
 
-# ---------------------------------------------------------------------------
+
 # 5. GENERIC TRAINING LOOP
-# ---------------------------------------------------------------------------
 
 def train_loop(
     model: GPT,
@@ -546,9 +543,9 @@ def train_loop(
     return model, optimizer
 
 
-# ---------------------------------------------------------------------------
+
 # 6. PIPELINE — base → midtrain → SFT
-# ---------------------------------------------------------------------------
+
 
 def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
                  skip_base: bool = False, skip_mid: bool = False):
@@ -572,9 +569,9 @@ def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
         start_step = ckpt.get("step", 0)
         log.info(f"Loaded checkpoint at step {start_step}, stage: {ckpt.get('stage', 'unknown')}")
 
-    # ================================================================
-    # STAGE 1: BASE PRETRAINING on FineWeb-Edu (streaming)
-    # ================================================================
+    
+    # BASE PRETRAINING on FineWeb-Edu (streaming)
+  
     if not skip_base:
         log.info("=" * 60)
         log.info("STAGE 1: BASE PRETRAINING (FineWeb-Edu, streaming)")
@@ -598,9 +595,9 @@ def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
     else:
         optimizer = None
 
-    # ================================================================
-    # STAGE 2: MIDTRAINING — learn conversation format
-    # ================================================================
+  
+    #  MIDTRAINING — learn conversation format
+   
     if not skip_mid:
         log.info("=" * 60)
         log.info("STAGE 2: MIDTRAINING (conversation format)")
@@ -613,10 +610,10 @@ def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
             batch_size=cfg.batch_size,
         )
 
-        # midtraining config — lower LR, fewer steps
+        # midtraining config lower LR, fewer steps
         mid_cfg = TrainConfig(
             batch_size=cfg.batch_size,
-            gradient_accumulation_steps=4,   # smaller effective batch
+            gradient_accumulation_steps=4,   # smaller ef batch
             max_steps=3000,
             learning_rate=2e-4,              # lower LR for fine-tuning
             min_lr=2e-5,
@@ -643,9 +640,9 @@ def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
         )
         log.info("Midtraining complete!")
 
-    # ================================================================
-    # STAGE 3: SFT — polish chat quality
-    # ================================================================
+    
+    # SFT — polish chat quality
+   
     log.info("=" * 60)
     log.info("STAGE 3: SFT (supervised fine-tuning)")
     log.info("=" * 60)
@@ -694,9 +691,8 @@ def run_pipeline(cfg: TrainConfig, model_cfg: ModelConfig, resume: str = "",
     log.info("=" * 60)
 
 
-# ---------------------------------------------------------------------------
-# 7. INTERACTIVE CHAT
-# ---------------------------------------------------------------------------
+
+#  INTERACTIVE CHAT
 
 def chat_interactive(checkpoint_path: str):
     """Interactive chat with the trained model."""
@@ -754,9 +750,8 @@ def chat_interactive(checkpoint_path: str):
         history += f"{SPECIAL_TOKENS['assistant_start']}{response}{SPECIAL_TOKENS['assistant_end']}"
 
 
-# ---------------------------------------------------------------------------
-# 8. SIMPLE GENERATION (non-chat)
-# ---------------------------------------------------------------------------
+
+# SIMPLE GENERATION (non-chat)
 
 def generate_text(checkpoint_path: str, prompt: str = "Once upon a time",
                   max_tokens: int = 200, temperature: float = 0.8, top_k: int = 200):
@@ -771,9 +766,9 @@ def generate_text(checkpoint_path: str, prompt: str = "Once upon a time",
     print(enc.decode(y[0].tolist()))
 
 
-# ---------------------------------------------------------------------------
-# 9. CLI
-# ---------------------------------------------------------------------------
+
+#  CLI
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Full LLM Training Pipeline")

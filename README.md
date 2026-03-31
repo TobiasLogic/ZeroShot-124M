@@ -6,13 +6,13 @@
 ![Dataset](https://img.shields.io/badge/Dataset-FineWeb--Edu_(Streamed)-yellow)
 ![Pipeline](https://img.shields.io/badge/Pipeline-Base_+_Mid_+_SFT-purple)
 ![Final Loss](https://img.shields.io/badge/Base_Loss-3.45-brightgreen)
-![Cost](https://img.shields.io/badge/Total_Cost-$0.54-red)
+![Cost](https://img.shields.io/badge/Total_Cost-$6.77-red)
 
 ZeroShot-124M is a fully custom 124 million parameter language model trained entirely from scratch — base pre-training, mid-training, and supervised fine-tuning — on a single rented consumer GPU. The entire pipeline goes from random weights to a functional chatbot that speaks grammatical English in ~30 hours.
 
 Unlike the [original MicroGPT (30.5M)](https://github.com/TobiasLogic/microgpt) which was a base-only model, this one completes the full training pipeline: base pre-training on billions of unique tokens, mid-training to learn conversation format, and SFT to polish it into something you can actually chat with.
 
-Total compute cost: **$0.54**.
+Total compute cost: **$6.77**.
 
 ## Model Specifications
 

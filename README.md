@@ -236,8 +236,7 @@ The original plan was to train on a GPU rented in China (cheaper rates). The Gre
 - [nanoGPT](https://github.com/karpathy/nanoGPT) & [nanochat](https://github.com/karpathy/nanochat) by Andrej Karpathy
 - [Chinchilla scaling laws](https://arxiv.org/abs/2203.15556) for the tokens-to-parameters ratio
 - [FineWeb-Edu](https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu-score-2) by HuggingFace
-- Gemini for the vocab padding and batch size optimization suggestions
-- Claude for writing the training pipeline and debugging Blackwell GPU compatibility
+
 
 ## License
 
